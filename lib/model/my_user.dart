@@ -4,65 +4,78 @@
 
 import 'dart:convert';
 
+////////////////////////////////////////
+///
+/// SINGLE USER METHODES
+///
 MyUserModel myUserModelFromJson(String str) =>
     MyUserModel.fromJson(json.decode(str));
 
 String myUserModelToJson(MyUserModel data) => json.encode(data.toJson());
 
+/////////////////////////////////////////////
+///
+/// USER LIST METHODES
+///
+List<MyUserModel> myUserModeListFromJson(String str) => List<MyUserModel>.from(
+    json.decode(str).map((x) => MyUserModel.fromJson(x)));
+
+String myUserModelListToJson(List<MyUserModel> data) =>
+    json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
+
 class MyUserModel {
-  int id;
-  String nom;
-  String prenoms;
-  DateTime dateVisite;
-  String heureEntreeViste;
-  String? heureSortieVisite;
-  String? numeroCni;
-  String? plaqueVehicule;
-  String email;
-  String number;
-  int isAlreadyScanned;
+  final int id;
+  final String uniqueId;
+  final String name;
+  final String firstname;
+  final String email;
+  final String phone;
+  final dynamic pass;
+  final dynamic emailVerifiedAt;
+  String status;
+  final dynamic qrcode;
+  int isChecked;
 
   MyUserModel({
     required this.id,
-    required this.nom,
-    required this.prenoms,
-    required this.dateVisite,
-    required this.heureEntreeViste,
-    this.heureSortieVisite,
-    this.numeroCni,
-    this.plaqueVehicule,
+    required this.uniqueId,
+    required this.name,
+    required this.firstname,
     required this.email,
-    required this.number,
-    this.isAlreadyScanned = 0,
+    required this.phone,
+    required this.pass,
+    required this.emailVerifiedAt,
+    required this.status,
+    required this.qrcode,
+    required this.isChecked,
   });
 
   factory MyUserModel.fromJson(Map<String, dynamic> json) => MyUserModel(
         id: json["id"],
-        nom: json["nom"],
-        prenoms: json["prenoms"],
-        dateVisite: DateTime.parse(json["date_visite"]),
-        heureEntreeViste: json["heure_entree_viste"],
-        heureSortieVisite: json["heure_sortie_visite"],
-        numeroCni: json["numero_cni"],
-        plaqueVehicule: json["plaque_vehicule"],
+        uniqueId: json["unique_id"],
+        name: json["name"],
+        firstname: json["firstname"],
         email: json["email"],
-        number: json["number"],
-        isAlreadyScanned: json["is_already_scanned"],
+        phone: json["phone"],
+        pass: json["pass"],
+        emailVerifiedAt: json["email_verified_at"],
+        status: json["status"],
+        qrcode: json["qrcode"],
+        isChecked: json["is_checked"],
       );
 
   Map<String, dynamic> toJson() => {
         "id": id,
-        "nom": nom,
-        "prenoms": prenoms,
-        "date_visite":
-            "${dateVisite.year.toString().padLeft(4, '0')}-${dateVisite.month.toString().padLeft(2, '0')}-${dateVisite.day.toString().padLeft(2, '0')}",
-        "heure_entree_viste": heureEntreeViste,
-        "heure_sortie_visite": heureSortieVisite,
-        "numero_cni": numeroCni,
-        "plaque_vehicule": plaqueVehicule,
+        "unique_id": uniqueId,
+        "name": name,
+        "firstname": firstname,
         "email": email,
-        "number": number,
-        "is_already_scanned": isAlreadyScanned,
+        "phone": phone,
+        "pass": pass,
+        "email_verified_at": emailVerifiedAt,
+        "status": status,
+        "qrcode": qrcode,
+        "is_checked": isChecked,
       };
 
   static List<MyUserModel> userList = [];

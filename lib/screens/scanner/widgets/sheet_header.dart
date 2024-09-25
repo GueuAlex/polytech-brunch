@@ -14,7 +14,7 @@ class SheetHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 150,
+      //height: 150,
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.grey.withOpacity(0.3),
@@ -33,7 +33,7 @@ class SheetHeader extends StatelessWidget {
               color: Colors.black,
               border: Border.all(
                 width: 3,
-                color: Palette.secondaryColor,
+                color: Palette.appPrimaryColor,
               ),
               shape: BoxShape.circle,
             ),
@@ -46,19 +46,17 @@ class SheetHeader extends StatelessWidget {
             height: 5,
           ),
           AppText.large(
-            '${user.nom} ${user.prenoms}',
+            '${user.firstname} ${user.name}',
+            textOverflow: TextOverflow.fade,
             fontSize: 19,
             color: Colors.black.withOpacity(0.7),
           ),
           AppText.small(
-            (user.isAlreadyScanned == 0 && user.heureSortieVisite == null)
-                ? 'visiteur'
-                : (user.isAlreadyScanned == 1 && user.heureSortieVisite == null)
-                    ? 'Visiteur'
-                    : 'Visite terminée',
+            '${user.phone}',
             fontSize: 15,
             fontWeight: FontWeight.w400,
-          )
+          ),
+          const SizedBox(height: 10)
         ],
       ),
     );

@@ -59,7 +59,7 @@ class ErrorSheetContainer extends StatelessWidget {
               left: 50,
             ),
             child: CustomButton(
-              color: Palette.primaryColor,
+              color: Palette.appBlackColor,
               width: double.infinity,
               height: 35,
               radius: 5,

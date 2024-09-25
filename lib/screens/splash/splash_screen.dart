@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:scanner/config/palette.dart';
-import 'package:scanner/screens/scanner/scan_screen.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
+import '../../config/functions.dart';
 import '../../widgets/copy_rigtht.dart';
-import '../auth/login/login.dart';
+import '../scanner/scan_screen.dart';
+import '../scanner/widgets/verify_by_code_sheet.dart';
 
 class SplashScreen extends StatefulWidget {
   static String routeName = '/splashScreen';
@@ -17,6 +18,7 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
+    Functions.getUserListFromApi();
     Future.delayed(const Duration(seconds: 10)).then((_) {
       Navigator.of(context).pushNamedAndRemoveUntil(
         ScanSreen.routeName,

@@ -27,10 +27,8 @@ class ScanContainer extends StatelessWidget {
           ),
           leading:
               const ProfilPictureContaire(asset: 'assets/images/profil.jpg'),
-          title: AppText.medium('${scan.data.nom} ${scan.data.prenoms}'),
-          subtitle: scan.data.heureSortieVisite == null
-              ? AppText.small('Visite en cours')
-              : AppText.small('Visite terminée'),
+          title: AppText.medium('${scan.data.firstname} ${scan.data.name}'),
+          subtitle: AppText.small('Visite terminée'),
           trailing: const Icon(
             CupertinoIcons.chevron_right,
           ),

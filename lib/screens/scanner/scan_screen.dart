@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:scanner/config/palette.dart';
+import 'package:scanner/model/my_user.dart';
 import 'package:scanner/screens/scanner/widgets/infos_column.dart';
 import 'package:scanner/widgets/all_sheet_header.dart';
 import 'package:scanner/widgets/custom_button.dart';
-import 'package:toggle_switch/toggle_switch.dart';
 import 'package:vibration/vibration.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:double_back_to_close_app/double_back_to_close_app.dart';
@@ -13,9 +13,9 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../config/app_text.dart';
 import '../../config/functions.dart';
 import '../../config/overlay.dart';
-import '../side_bar/custom_side_bar.dart';
 import 'widgets/error_sheet_container.dart';
 import 'widgets/sheet_container.dart';
+import 'widgets/sheet_header.dart';
 
 class ScanSreen extends StatefulWidget {
   static String routeName = '/scannerScreen';
@@ -45,7 +45,7 @@ class _ScanSreenState extends State<ScanSreen> {
 
   //////////////////
   ///
-  List<String> toggle = ['Scanner', 'vérifier un code'];
+  List<String> toggle = ['Scanner', 'Inscrire'];
   ///////////
   ///
   int selectdeIndx = 0;
@@ -66,240 +66,385 @@ class _ScanSreenState extends State<ScanSreen> {
     final size = MediaQuery.of(context).size;
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      body: Container(
-        width: double.infinity,
-        height: MediaQuery.of(context).size.height,
-        color: Colors.transparent,
-        child: Column(
-          children: [
-            Expanded(
-              flex: 4,
-              child: Stack(
-                children: [
-                  MobileScanner(
-                    //fit: BoxFit.cover,
+      body: DoubleBackToCloseApp(
+        snackBar: SnackBar(
+          content: AppText.medium(
+            'Double tape pour quitter',
+            color: Palette.whiteColor,
+          ),
+        ),
+        child: Container(
+          width: double.infinity,
+          height: MediaQuery.of(context).size.height,
+          color: Colors.transparent,
+          child: Column(
+            children: [
+              Expanded(
+                flex: 4,
+                child: Stack(
+                  children: [
+                    /////////////
+                    ///
+                    MobileScanner(
+                      //fit: BoxFit.cover,
+                      controller: mobileScannerController,
+                      allowDuplicates: true,
+                      ////////////////
+                      // onDetect: fonction lancée lorsqu'un rq code est
+                      // detecté par la cam
+                      ////////////////////
+                      onDetect: (barcodes, args) async {
+                        if (!isScanCompleted) {
+                          ////////////////
+                          /// code =  données que le qrcode continet
+                          String code = barcodes.rawValue ?? '...';
+                          //print(code);
+                          //////////////
+                          /// booleen permettant de connaitre l'etat
+                          /// du process de scanning
+                          isScanCompleted = true;
+                          //////////////////////////
+                          /// on attend un int
+                          /// donc on int.tryParse code pour etre sur de
+                          /// son type
+                          int? data = int.tryParse(code);
 
-                    controller: mobileScannerController,
-                    allowDuplicates: true,
-                    onDetect: (barcodes, args) {
-                      if (!isScanCompleted) {
-                        String code = barcodes.rawValue ?? '...';
-                        print(code);
-                        isScanCompleted = true;
-                        int? id = int.tryParse(code);
-                        if (id != null) {
-                          player.play('images/soung.mp3');
-                          Functions.showBottomSheet(
-                            ctxt: context,
-                            widget: SheetContainer(qrValue: code),
-                          );
-                        } else {
-                          /////////// fiare vibrer le device
                           ///
-                          Vibration.vibrate(duration: 200);
-                          Functions.showBottomSheet(
-                            ctxt: context,
-                            widget: const ErrorSheetContainer(),
-                          );
-                        }
+                          /////////////////////////////
+                          ///data represente le code de préinscription
+                          ///d'un participant dans notre DB
+                          /// si data n'est pas null, on recherche
+                          /// le participant en fonction du data ........
+                          if (data != null) {
+                            MyUserModel? user = findUser(code: data.toString());
 
-                        /////
-                        Future.delayed(const Duration(seconds: 5)).then((_) {
-                          setState(() {
-                            isScanCompleted = false;
-                          });
-                        });
-                      }
-                    },
-                  ),
-                  const QRScannerOverlay(overlayColour: Colors.transparent),
-
-                  //////////////////////////////////////////:
-                  /// toggles buttons
-                  /// /////////////////////////////////////:
-                  Positioned(
-                    bottom: 0,
-                    child: SafeArea(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 17.0, horizontal: 8.0),
-                        width: size.width,
-                        height: 80,
-                        color: Colors.black.withOpacity(0.2),
-                        child: Center(
-                          child: Container(
-                            padding: const EdgeInsets.all(5),
-                            width: double.infinity,
-                            height: size.height,
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.5),
-                              borderRadius: BorderRadius.circular(7),
-                            ),
-                            child: Row(
-                              children: List.generate(
-                                toggle.length,
-                                (index) {
-                                  return Expanded(
-                                    child: InkWell(
-                                      onTap: () => setState(() {
-                                        selectdeIndx = index;
-                                        if (selectdeIndx == 1) {
-                                          Functions.showBottomSheet(
+                            //////////////////////////////////////:::::
+                            /// aucun participant trouvé avec ce code
+                            /// de participation ?
+                            if (user == null) {
+                              /////////
+                              ///
+                              Vibration.vibrate(duration: 200);
+                              Functions.showBottomSheet(
+                                ctxt: context,
+                                widget: Container(
+                                  height: size.height / 2.5,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(15),
+                                      topRight: Radius.circular(15),
+                                    ),
+                                  ),
+                                  child: SafeArea(
+                                    child: Column(
+                                      children: [
+                                        const AllSheetHeader(),
+                                        Expanded(
+                                          child: Functions.widget404(
+                                            size: size,
                                             ctxt: context,
-                                            widget: VerifyCodeSheet(
-                                              size: size,
-                                              changeIndexState: () =>
-                                                  setState(() {
-                                                selectdeIndx = 0;
-                                              }),
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+
+                              ///////////////
+                            }
+                            if (user!.isChecked == 1) {
+                              Vibration.vibrate(duration: 200);
+                              Functions.showBottomSheet(
+                                ctxt: context,
+                                widget: Container(
+                                  height: size.height / 2.5,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(15),
+                                      topRight: Radius.circular(15),
+                                    ),
+                                  ),
+                                  child: SafeArea(
+                                    child: Column(
+                                      children: [
+                                        const AllSheetHeader(),
+                                        Expanded(
+                                            child: Functions.inactifQrCode(
+                                          ctxt: context,
+                                        ))
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            } else {
+                              //////////////////////
+                              /// PREMIER SCAN
+                              /////////////////////////
+                              player.play('images/soung.mp3');
+
+                              Functions.showBottomSheet(
+                                ctxt: context,
+                                widget: Container(
+                                  height: size.height / 1.8,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(15),
+                                      topRight: Radius.circular(15),
+                                    ),
+                                  ),
+                                  child: SafeArea(
+                                    child: Column(
+                                      children: [
+                                        const AllSheetHeader(),
+                                        Expanded(
+                                            child: SingleChildScrollView(
+                                                child: Column(
+                                          children: [
+                                            SheetHeader(
+                                              user: user,
                                             ),
-                                          );
-                                        }
-                                      }),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(7),
-                                          color: index == selectdeIndx
-                                              ? Palette.whiteColor
-                                              : Colors.transparent,
-                                        ),
-                                        child: Center(
-                                          child: AppText.medium(
-                                            toggle[index],
+                                            Padding(
+                                              padding: const EdgeInsets.all(10),
+                                              child: participant(
+                                                user: user,
+                                              ),
+                                            ),
+                                          ],
+                                        )))
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }
+                            /* player.play('images/soung.mp3');
+                            Functions.showBottomSheet(
+                              ctxt: context,
+                              widget: SheetContainer(code: code),
+                            ); */
+                          } else {
+                            /////////// fiare vibrer le device
+                            ///
+                            Vibration.vibrate(duration: 200);
+                            Functions.showBottomSheet(
+                              ctxt: context,
+                              widget: const ErrorSheetContainer(),
+                            );
+                          }
+
+                          /////
+                          Future.delayed(const Duration(seconds: 3)).then((_) {
+                            setState(() {
+                              isScanCompleted = false;
+                            });
+                          });
+                        }
+                      },
+                    ),
+                    ///////////////
+                    ///
+                    const QRScannerOverlay(overlayColour: Colors.transparent),
+
+                    //////////////////////////////////////////:
+                    /// toggles buttons
+                    /// /////////////////////////////////////:
+                    Positioned(
+                      bottom: 0,
+                      child: SafeArea(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 17.0, horizontal: 8.0),
+                          width: size.width,
+                          height: 80,
+                          color: Colors.black.withOpacity(0.2),
+                          child: Center(
+                            child: Container(
+                              padding: const EdgeInsets.all(5),
+                              width: double.infinity,
+                              height: size.height,
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(7),
+                              ),
+                              child: Row(
+                                children: List.generate(
+                                  toggle.length,
+                                  (index) {
+                                    return Expanded(
+                                      child: InkWell(
+                                        onTap: () => setState(() {
+                                          selectdeIndx = index;
+                                          if (selectdeIndx == 1) {
+                                            Functions.showBottomSheet(
+                                              ctxt: context,
+                                              widget: VerifyCodeSheet(
+                                                size: size,
+                                                changeIndexState: () =>
+                                                    setState(
+                                                  () {
+                                                    selectdeIndx = 0;
+                                                  },
+                                                ),
+                                              ),
+                                            ).whenComplete(() {
+                                              setState(() {
+                                                selectdeIndx = 0;
+                                              });
+                                            });
+                                          }
+                                        }),
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(7),
                                             color: index == selectdeIndx
-                                                ? Colors.black
-                                                : Palette.whiteColor,
+                                                ? Palette.whiteColor
+                                                : Colors.transparent,
+                                          ),
+                                          child: Center(
+                                            child: AppText.medium(
+                                              toggle[index],
+                                              color: index == selectdeIndx
+                                                  ? Colors.black
+                                                  : Palette.whiteColor,
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  );
-                                },
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  /////////////////////////////////////:
-                  /// end toggles buttons
-                  ////////////////////////////////////:
+                    /////////////////////////////////////:
+                    /// end toggles buttons
+                    ////////////////////////////////////:
 
-                  ///////////////////////////////////
-                  /// flash toggle bottuons
-                  Positioned(
-                    top: 0,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 10),
-                      width: size.width,
-                      //height: 100,
-                      color: Colors.black.withOpacity(0.2),
-                      child: SafeArea(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            AppText.medium(
-                              'Place the QR code in the area',
-                              color: Palette.whiteColor,
-                            ),
-                            AppText.small(
-                              'Scanning will be started automatically',
-                              color: Palette.whiteColor,
-                            ),
-                            SizedBox(height: 10),
-                            Container(
-                              width: size.width / 3.5,
-                              padding: const EdgeInsets.all(5),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.5),
-                                borderRadius: BorderRadius.circular(7),
+                    ///////////////////////////////////
+                    /// flash toggle bottuons
+                    Positioned(
+                      top: 0,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 10),
+                        width: size.width,
+                        //height: 100,
+                        color: Colors.black.withOpacity(0.2),
+                        child: SafeArea(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              AppText.medium(
+                                'Place the QR code in the area',
+                                color: Palette.whiteColor,
                               ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: InkWell(
-                                      onTap: () {
-                                        setState(() {
-                                          isFlashOn = !isFlashOn;
-                                        });
-                                        print(mobileScannerController
-                                            .torchState.value
-                                            .toString());
-                                        if (mobileScannerController
-                                                .torchState.value
-                                                .toString() ==
-                                            "TorchState.off") {
-                                          mobileScannerController.toggleTorch();
-                                        }
-                                        ;
-                                      },
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: isFlashOn
-                                              ? Palette.whiteColor
-                                              : Colors.transparent,
-                                          borderRadius:
-                                              BorderRadius.circular(7),
-                                        ),
-                                        child: Center(
-                                          child: Icon(
-                                            CupertinoIcons.light_max,
+                              AppText.small(
+                                'Scanning will be started automatically',
+                                color: Palette.whiteColor,
+                              ),
+                              SizedBox(height: 10),
+                              ////////////////////////
+                              ///torch container
+                              Container(
+                                width: size.width / 3.5,
+                                padding: const EdgeInsets.all(5),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.5),
+                                  borderRadius: BorderRadius.circular(7),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            isFlashOn = true;
+                                          });
+
+                                          if (mobileScannerController
+                                                  .torchState.value
+                                                  .toString() ==
+                                              "TorchState.off") {
+                                            mobileScannerController
+                                                .toggleTorch();
+                                          }
+                                          ;
+                                        },
+                                        child: Container(
+                                          decoration: BoxDecoration(
                                             color: isFlashOn
-                                                ? Colors.black
-                                                : Palette.whiteColor,
+                                                ? Palette.whiteColor
+                                                : Colors.transparent,
+                                            borderRadius:
+                                                BorderRadius.circular(7),
+                                          ),
+                                          child: Center(
+                                            child: Icon(
+                                              CupertinoIcons.light_max,
+                                              color: isFlashOn
+                                                  ? Colors.black
+                                                  : Palette.whiteColor,
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  Expanded(
-                                    child: InkWell(
-                                      onTap: () {
-                                        setState(() {
-                                          isFlashOn = !isFlashOn;
-                                        });
-                                        if (mobileScannerController
-                                                .torchState.value
-                                                .toString() ==
-                                            "TorchState.on") {
-                                          mobileScannerController.toggleTorch();
-                                        }
-                                        ;
-                                      },
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: !isFlashOn
-                                              ? Palette.whiteColor
-                                              : Colors.transparent,
-                                          borderRadius:
-                                              BorderRadius.circular(7),
-                                        ),
-                                        child: Center(
-                                          child: Icon(
-                                            CupertinoIcons.light_min,
+                                    Expanded(
+                                      child: InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            isFlashOn = false;
+                                          });
+                                          if (mobileScannerController
+                                                  .torchState.value
+                                                  .toString() ==
+                                              "TorchState.on") {
+                                            mobileScannerController
+                                                .toggleTorch();
+                                          }
+                                          ;
+                                        },
+                                        child: Container(
+                                          decoration: BoxDecoration(
                                             color: !isFlashOn
-                                                ? Colors.black
-                                                : Palette.whiteColor,
+                                                ? Palette.whiteColor
+                                                : Colors.transparent,
+                                            borderRadius:
+                                                BorderRadius.circular(7),
+                                          ),
+                                          child: Center(
+                                            child: Icon(
+                                              CupertinoIcons.light_min,
+                                              color: !isFlashOn
+                                                  ? Colors.black
+                                                  : Palette.whiteColor,
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  )
-                                ],
-                              ),
-                            )
-                          ],
+                                    )
+                                  ],
+                                ),
+                              )
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  )
-                ],
+                    )
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -309,6 +454,150 @@ class _ScanSreenState extends State<ScanSreen> {
 
   ///
   ///////////////////////
+  MyUserModel? findUser({required String code}) {
+    MyUserModel _user;
+    for (MyUserModel u in MyUserModel.userList) {
+      if (u.uniqueId == code) {
+        _user = u;
+        return _user;
+      }
+    }
+    return null;
+  }
+
+  Widget participant({required MyUserModel user}) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 150,
+              height: 145,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                border: Border.all(
+                  width: 2,
+                  color: Palette.appBlackColor,
+                ),
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage(
+                      'assets/images/qr-model.png',
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 5),
+            Expanded(
+              child: Column(
+                children: [
+                  InfosColumn(
+                    label: 'Status',
+                    widget: AppText.medium(user.status),
+                  ),
+                  const SizedBox(height: 10),
+                  InfosColumn(
+                    label: 'Code pré-inscription',
+                    widget: AppText.medium(
+                      user.uniqueId,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  InfosColumn(
+                    label: 'Email',
+                    widget: AppText.medium(
+                      '${user.email}',
+                      textOverflow: TextOverflow.ellipsis,
+                    ),
+                  )
+                ],
+              ),
+            )
+          ],
+        ),
+        const SizedBox(height: 20),
+        CustomButton(
+          color: Palette.appBlackColor,
+          width: double.infinity,
+          height: 35,
+          radius: 5,
+          text: 'Confirmer le scan',
+          onPress: () {
+            Map<String, dynamic> data = {
+              "is_checked": 1,
+            };
+            Functions.showLoadingSheet(ctxt: context);
+            Functions.updateIscheckedValue(data: data, userId: user.id)
+                .whenComplete(
+              () {
+                user.isChecked = 1;
+                Functions.getUserListFromApi();
+                Functions.showToast(message: 'scan confirmé');
+                Navigator.pop(context);
+                Navigator.pop(context);
+              },
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class ScanAlert extends StatefulWidget {
+  final MyUserModel user;
+  const ScanAlert({
+    super.key,
+    required this.user,
+  });
+
+  @override
+  State<ScanAlert> createState() => _ScanAlertState();
+}
+
+class _ScanAlertState extends State<ScanAlert> {
+  // bool isLoading = true;
+  Map<String, dynamic> data = {
+    "is_checked": 1,
+  };
+  @override
+  void initState() {
+    Functions.updateIscheckedValue(data: data, userId: widget.user.id);
+    widget.user.isChecked = 1;
+    Functions.getUserListFromApi();
+    Future.delayed(const Duration(seconds: 2))
+        .then((value) => Navigator.pop(context));
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Container(
+        padding: const EdgeInsets.all(10),
+        height: size.height,
+        width: double.infinity,
+        child: Center(
+          child: Container(
+            width: 200,
+            height: 100,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: Palette.whiteColor,
+            ),
+            child: Image.asset('assets/images/check.gif'),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class VerifyCodeSheet extends StatefulWidget {
@@ -415,7 +704,22 @@ class _VerifyCodeSheetState extends State<VerifyCodeSheet> {
               height: 40,
               radius: 5,
               text: 'Vérifier',
-              onPress: () {},
+              onPress: () {
+                String code = codeController.text.trim();
+                if (code.isEmpty) {
+                  Functions.showToast(message: 'Veuillez fournir un code');
+                }
+                if (int.tryParse(code) == null) {
+                  Vibration.vibrate(duration: 200);
+                  Functions.showToast(message: 'Code invalide !');
+                } else {
+                  Functions.showBottomSheet(
+                    ctxt: context,
+                    widget: SheetContainer(code: code),
+                  );
+                }
+                ;
+              },
             ),
           )
         ],

@@ -16,21 +16,27 @@ class CopyRight extends StatelessWidget {
           padding: const EdgeInsets.only(top: 5, bottom: 5.0),
           child: SizedBox(
             height: 18,
-            child: Image.asset('assets/images/copy_logo1.png'),
+            //child: Image.asset('assets/images/copy_logo1.png'),
           ),
         ),
         AppText.small(
-          'Copyright © 2023 \u2022 DIGIFAZ | QR scanner \u2022 Tous droits réservés.',
+          //'Copyright © 2023 \u2022 DIGIFAZ | QR scanner \u2022 Tous droits réservés.',
+          '',
           fontSize: 10,
           textAlign: TextAlign.center,
         ),
         const SizedBox(
           height: 10,
         ),
-        AppText.small(
-          'Developed by DIGIFAZ ®',
-          fontSize: 8,
-          fontWeight: FontWeight.w500,
+        Padding(
+          padding: const EdgeInsets.only(bottom: 15),
+          child: AppText.small(
+            'Developed by DIGIFAZ ®\nwww.digifaz.com',
+            textAlign: TextAlign.center,
+            color: Color.fromARGB(255, 225, 225, 225),
+            fontSize: 8,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         const SizedBox(
           height: 4.0,

@@ -38,7 +38,7 @@ dependencies:
   mobile_scanner: ^2.1.0
   qr_flutter: ^4.0.0
   flutter_svg: ^2.0.5
-  intl: ^0.17.0
+  intl: ^0.18.1
   flutter_localizations:
     sdk: flutter
   double_back_to_close_app: ^2.1.0
@@ -47,6 +47,9 @@ dependencies:
   http: ^0.13.6
   toggle_switch: ^2.1.0
   loading_animation_widget: ^1.2.0+4
+  fluttertoast: ^8.2.2
+  get: ^4.6.5
+  connectivity_plus: ^3.0.3
 
 dev_dependencies:
   flutter_test:
